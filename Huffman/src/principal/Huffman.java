@@ -11,19 +11,21 @@ import java.io.Serializable;
 import java.util.PriorityQueue;
 
 public abstract class Huffman {
-	//Conta ocorrências de cada caracter unicode
+	/**Conta ocorrências de cada caracter unicode*/
 	private static int[] proccess(File file)
 	{
                 //16384 é o primeiro caracter inválido
-		int[] occurences = new int[16384];
+		int[] ocorrencias = new int[16384];
 		
 		try {
 			FileReader in = new FileReader(file);
 			
 			int c;
                         //código sucinto da porra! Pires s2 Prato
-			while((c = in.read()) != -1)
-				occurences[c]++;
+                        /* lê cada caractere a caractere, e a cada ocorrencia
+                        vai incrementando no vetor na posicao especifica*/
+			while((c = in.read()) != -1) //-1 = até o fim do arquivo
+				ocorrencias[c]++;
 			
 			in.close();
 		}
@@ -31,7 +33,7 @@ public abstract class Huffman {
 			e.printStackTrace();
 		}
 		
-		return occurences;
+		return ocorrencias;
 	}
 
 	public static void compress(File inFile, File outFile)
@@ -39,6 +41,7 @@ public abstract class Huffman {
                 //construir a arvore
 		HuffmanTree tree = HuffmanTree.build(proccess(inFile));
 		System.out.println(tree); //impreme a arvore
+                //JOptionPane.showMessageDialog(null, tree);
 
 		try {
 			FileReader in = new FileReader(inFile);
@@ -140,6 +143,8 @@ public abstract class Huffman {
 			HuffmanTree subTree = this;
 			int counter = 1;
 			
+                        /*sabemos que a arvore de huffman eh desbalanceada para a direita,
+                        entao sabemos que os maiores ramos sao os da direita*/
 			while (subTree.right != null)
 			{
 				subTree = subTree.right;
@@ -180,19 +185,23 @@ public abstract class Huffman {
 			return subTree.left.ch;
 		}
 
-		public static HuffmanTree build(int[] occurences)
+		public static HuffmanTree build(int[] ocorrencias)
 		{
-                        //lista de caracter
+                        //fila de caracter
 			PriorityQueue<HuffmanTree> tree_list = new PriorityQueue<HuffmanTree>();
 			
-			for (int i = 0; i < occurences.length; i++)
-				if (occurences[i] != 0)
+			for (int i = 0; i < ocorrencias.length; i++)
+				if (ocorrencias[i] != 0)
                                         //adiciona cada caracter na lista (nao esta ordenado)
-					tree_list.add(new HuffmanTree((char) i, occurences[i]));
+					tree_list.add(new HuffmanTree((char) i, ocorrencias[i]));
 
 			while(tree_list.size() > 1)
 			{   
                                 //concatena de dois em dois os caracteres menos frequentes
+                                /*  * remove os dois menos frequentes e une em uma sub-árvore (a '\0')
+                                    * adiciona esse '\0' a fila
+                                    * repete, ate sobrar apenas um elemento na fila (vira uma arvore só)
+                                */
 				tree_list.offer(
 						new HuffmanTree('\0', 0)
 							.setRight(tree_list.poll())
@@ -208,7 +217,7 @@ public abstract class Huffman {
 		public boolean isLeaf() {
 			return left == null && right == null;
 		}
-                /** a cada no recebe um inteiro que sera convertido para binario*/
+                /** a cada no (folha) recebe um inteiro que sera convertido para binario*/
 		private void genCodes(HuffmanTree node, int zeros)
 		{
 			if (node.isLeaf())
@@ -221,8 +230,8 @@ public abstract class Huffman {
 
 		public String toString() {
 			String s = "";
-			HuffmanTree aux = this;
-			System.out.println("CHAR\tFREQUENCY\tCODE");
+                        HuffmanTree aux = this;
+			s+=("CHAR\tFREQUENCY\tCODE\n");
 			while(aux.right != null) {
 				s += "\n" + aux.left.ch + "\t" + aux.left.freq + "\t\t" + codeToString(aux.left.code);
 				aux = aux.right;
@@ -231,15 +240,19 @@ public abstract class Huffman {
 			return s;
 		}
                 
-                /** trasnforma o codigo inteiro em binario*/
+                /** trasnforma o codigo de int em binario*/
 		private String codeToString(int code)
 		{
 			StringBuilder sb = new StringBuilder();
 			int height = getHeight();
 			
+                        //ex: se codigo = 2 => 001
+                        //codigo int equivale a qnt de zeros
 			for (int i = 0; i < code; i++)
 				sb.append('0');
 			
+                        //se a folha nao for a ultima posicao, termina com 1
+                        //caractere menos frequnete nao termina com 1
 			if (code < height - 1)
 				sb.append('1');
 			

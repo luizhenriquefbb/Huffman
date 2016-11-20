@@ -54,7 +54,7 @@ public class BitBufferWriter {
 			ibit %= 8;			
 		}
 
-		if (one)
+		if (one) //boleana que diz se eh o no a ser tratado NAO eh o ultimo
 		{
 			data[ibyte] |= BitBuffer.bits[ibit];
 			ibit = (ibit + 1) % 8;

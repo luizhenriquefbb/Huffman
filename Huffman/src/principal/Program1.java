@@ -1,7 +1,6 @@
 package principal;
 
 import java.io.File;
-import javax.swing.JOptionPane;
 
 /** classe de testes*/
 public class Program1 {
@@ -12,9 +11,9 @@ public class Program1 {
                 String des = "C:\\Users\\RenataMaria\\Desktop\\";
                 args = new String[4];
                 //args[0]= "-c";
-                String in = args[1] = des+"a.txt";
-                String out = args[2] = des+"b.txt";
-                args[3] = des + "c.txt";
+                String in = args[1] = des+"a";
+                String out = args[2] = des+"b";
+                args[3] = des + "c";
                 
                 File inFile = new File(in);
                 File outFile = new File(out);
@@ -28,7 +27,6 @@ public class Program1 {
                 outFile = new File(out);
                 Huffman.decompress(inFile, outFile);
 
-                return;
                 
                 
                 
