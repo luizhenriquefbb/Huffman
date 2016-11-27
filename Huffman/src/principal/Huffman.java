@@ -2,46 +2,18 @@ package principal;
 
 
 import Arquivo.IO_object;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.PriorityQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 class Huffman {
     static String texto;
     static String binario;
     
-    static int[] lerArquivo(FileInputStream in) {
+    static int[] lerArquivo() {
         int[] caracteres = new int[16384]; //16384 é o primeiro caracter inválido
 
         //ler o arquivo e colocar numa String
-        InputStreamReader input = new InputStreamReader(in);
-        BufferedReader br = new BufferedReader(input);
-
-        texto = "";
-
-        try {
-            do {
-                String aux = br.readLine(); //ler um texto;
-
-                if (aux != null) {
-                    texto += aux;
-                } else {
-                    break;
-                }
-
-            } while (true);
-
-            in.close();
-            input.close();
-            br.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Huffman.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        texto = Arquivo.LerESalva.lerArquivo("arquivos\\"+"a.txt");
 
         //cada caractere é uma posiçao no array
         for (int i = 0; i < texto.length(); i++) {
@@ -51,9 +23,9 @@ class Huffman {
         return caracteres;
     }
 
-    public static void comprimir(FileInputStream in) {
+    public static void comprimir() {
         //construir a arvore
-        HuffmanArvore arvore = HuffmanArvore.construirArvore(lerArquivo(in));
+        HuffmanArvore arvore = HuffmanArvore.construirArvore(lerArquivo());
         
         System.out.println(arvore); //impreme a arvore
         
@@ -238,6 +210,12 @@ class Huffman {
         public boolean isFolha() {
             return esq == null && dir == null;
         }
+
+        public int getFreq() {
+            return freq;
+        }
+        
+        
 
         @Override
         public int compareTo(HuffmanArvore t) {
