@@ -6,16 +6,17 @@ import java.io.Serializable;
 import java.util.PriorityQueue;
 
 class Huffman {
-    static String texto;
+    static String texto; //texto original
     static String binario;
     
     static int[] lerArquivo() {
-        int[] caracteres = new int[16384]; //16384 é o primeiro caracter inválido
+        int[] caracteres = new int[16384]; //Java reconhece 16384 carcteres diferentes, cada um tem uma frequencia
 
-        //ler o arquivo e colocar numa String
+        //ler o arquivo e colocar numa String (String a ser comprimida)
         texto = Arquivo.LerESalva.lerArquivo("arquivos\\"+"a.txt");
 
         //cada caractere é uma posiçao no array
+        //varre caractere a caractere e a cada ocorrencia, soma no array
         for (int i = 0; i < texto.length(); i++) {
             caracteres[(int) texto.charAt(i)]++;
         }
@@ -27,18 +28,19 @@ class Huffman {
         //construir a arvore
         HuffmanArvore arvore = HuffmanArvore.construirArvore(lerArquivo());
         
-        System.out.println(arvore); //impreme a arvore
+        System.out.println(arvore); //imprime a arvore (tabela de frequencia e codigo)
         
+        //agr que ja temos a arvore (tabela, podemos construir o binario)
         //construir binario
         binario = texto;
         for (int i = 0;i<binario.length();){ //caractere a caractere
             char c = binario.charAt(i);
-            int codigo = arvore.find(binario.charAt(i));
-            String codigoString = arvore.codigoToString(codigo); //relacao char-codigo
+            int codigo = arvore.busca(binario.charAt(i));
+            String codigoString = arvore.codigoToString(codigo); //relacao codigo-binario
             binario = binario.replaceFirst(""+c, ""+codigoString); //substitui
             i+=codigoString.length(); //anda o numero de caracteres inseridos
         }
-        System.out.println(binario);
+        System.out.println("\n\n"+binario);
         Arquivo.LerESalva.salvarArquivo("arquivos\\compactado.txt", binario);
         
         /* note que ao salvar nao esta compactado pois esta salvando String, nao binario.
@@ -46,7 +48,7 @@ class Huffman {
         
     }
 
-    public static void descomprime() {
+    public static void descomprimir() {
         
         // Ler arvore
         HuffmanArvore arvore = (HuffmanArvore) IO_object.carregar("arquivos\\arvore.temp");
@@ -56,17 +58,18 @@ class Huffman {
         String binaria = Arquivo.LerESalva.lerArquivo("arquivos\\compactado.txt");
         String original = "";
         
+        //o caractere é definido pela quatidade de zeros que foi encontrado em sequencia
         int zeros =0;
         for (int i=0;i<binaria.length();i++){
-            if(zeros == altura-1){ //ultimo caractere nao tem 1
-                original+=arvore.find(zeros);
+            if(zeros == altura-1){ //CASO ESPECIAL: ultimo caractere nao tem 1
+                original+=arvore.busca(zeros);
                 zeros=0;
                 i--;
                 continue;
             }
             
             if(binaria.charAt(i)=='1' ){ //outros caracteres terminam com 1
-                original+=arvore.find(zeros);
+                original+=arvore.busca(zeros);
                 zeros=0;
                 continue;
             }
@@ -82,6 +85,7 @@ class Huffman {
 
     /**
      * subclasse
+     * @author LuizHenrique
      */
     public static class HuffmanArvore implements Serializable, Comparable<HuffmanArvore> {
 
@@ -124,22 +128,22 @@ class Huffman {
         }
 
         /**
-         * procurar codigo de um caractere pelo caractere
+         * procurar codigo de pelo caractere
          *
          * @param c
          * @return
          */
-        public int find(char c) {
-            HuffmanArvore subTree = this;
+        public int busca(char c) {
+            HuffmanArvore aux = this;
             while (true) {
-                if (subTree.esq == null) {
-                    return subTree.codigo;
+                if (aux.esq == null) {
+                    return aux.codigo;
                 }
 
-                if (subTree.esq.ch == c) {
-                    return subTree.esq.codigo;
+                if (aux.esq.ch == c) {
+                    return aux.esq.codigo;
                 } else {
-                    subTree = subTree.dir;
+                    aux = aux.dir;
                 }
             }
         }
@@ -150,22 +154,22 @@ class Huffman {
          * @param codigo
          * @return
          */
-        public char find(int codigo) {
-            HuffmanArvore subTree = this;
+        public char busca(int codigo) {
+            HuffmanArvore aux = this;
 
             while (codigo-- > 0) {
-                if (subTree.dir != null) {
-                    subTree = subTree.dir;
+                if (aux.dir != null) {
+                    aux = aux.dir;
                 } else {
                     return 0;
                 }
             }
 
-            if (subTree.esq == null) {
-                return subTree.ch;
+            if (aux.esq == null) {
+                return aux.ch;
             }
 
-            return subTree.esq.ch;
+            return aux.esq.ch;
         }
 
         /**
@@ -185,7 +189,7 @@ class Huffman {
 
             while (fila.size() > 1) {
                 //concatena de dois em dois os caracteres menos frequentes
-                /*  * remove os dois menos frequentes e une em uma sub-árvore (a '\0')
+                /* remove os dois menos frequentes e une em uma sub-árvore (a '\0')
                  * adiciona esse '\0' a fila
                  * repete, ate sobrar apenas um elemento na fila (vira uma arvore só)
                  */
@@ -207,6 +211,7 @@ class Huffman {
             return arvore;
         }
 
+        /** metodo que checa se o elemento é uma folha da arvore*/
         public boolean isFolha() {
             return esq == null && dir == null;
         }
@@ -216,14 +221,14 @@ class Huffman {
         }
         
         
-
+        /**usado para ordenar a fila*/
         @Override
         public int compareTo(HuffmanArvore t) {
             return freq - t.freq;
         }
 
         /**
-         * setar o codigo recursivamente codigo == qnt de zeros
+         * setar o codigo recursivamente: codigo == qnt de zeros
          */
         private void gerarBinario(HuffmanArvore no, int zeros) {
             if (no.isFolha()) {
@@ -234,6 +239,7 @@ class Huffman {
             }
         }
 
+        /** imprime a tabela: frequencia e codigo*/
         @Override
         public String toString() {
             String s = "";
